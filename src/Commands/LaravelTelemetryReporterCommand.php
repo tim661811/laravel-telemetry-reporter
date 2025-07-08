@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Tim661811\LaravelTelemetryReporter\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LaravelTelemetryReporterCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-telemetry-reporter';
 
     public $description = 'My command';
 

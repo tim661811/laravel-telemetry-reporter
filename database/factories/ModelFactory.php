@@ -1,6 +1,6 @@
 <?php
 
-namespace VendorName\Skeleton\Database\Factories;
+namespace Tim661811\LaravelTelemetryReporter\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
