@@ -2,6 +2,7 @@
 
 namespace Tim661811\LaravelTelemetryReporter;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tim661811\LaravelTelemetryReporter\Commands\LaravelTelemetryReporterCommand;
@@ -18,8 +19,17 @@ class LaravelTelemetryReporterServiceProvider extends PackageServiceProvider
         $package
             ->name('laravel-telemetry-reporter')
             ->hasConfigFile()
-            ->hasViews()
-            ->hasMigration('create_laravel_telemetry_reporter_table')
             ->hasCommand(LaravelTelemetryReporterCommand::class);
+    }
+
+    public function bootingPackage(): void
+    {
+        // (2) Scheduling belongs in `bootingPackage`, not inside configurePackage
+        $this->app->booted(function () {
+            $this->app->make(Schedule::class)
+                ->command('telemetry:report')
+                ->everyMinute()     // internally gated by cache
+                ->name('telemetry:report');
+        });
     }
 }
