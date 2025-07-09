@@ -70,7 +70,6 @@ class LaravelTelemetryReporterCommand extends Command
             }
         }
 
-        dump($payload);
         if (count($payload['data'])) {
             Http::post($serverUrl, $payload);
             $this->info("Telemetry posted to {$serverUrl}");
