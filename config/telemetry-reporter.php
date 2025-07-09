@@ -1,6 +1,6 @@
 <?php
 
-use Carbon\CarbonInterval;
+use Tim661811\LaravelTelemetryReporter\Enum\TelemetryInterval;
 
 return [
     'enabled' => env('TELEMETRY_ENABLED', true),
@@ -14,5 +14,5 @@ return [
     'cache_store' => env('TELEMETRY_CACHE_STORE', null),
 
     // Default interval for methods without an explicit interval
-    'default_interval' => CarbonInterval::hours(24),
+    'default_interval' => TelemetryInterval::OneDay->value,
 ];
