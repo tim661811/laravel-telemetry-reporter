@@ -1,4 +1,4 @@
-### 📝 CHANGELOG.md (unreleased)
+### 📝 CHANGELOG
 
 ## 2025.1 (Unreleased)
 
