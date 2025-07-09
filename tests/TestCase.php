@@ -14,7 +14,7 @@ class TestCase extends Orchestra
         ];
     }
 
-    protected function defineEnvironment($app): void
+    protected function getEnvironmentSetUp($app): void
     {
         // Setup default database to use sqlite :memory:
         $app['config']->set('database.default', 'testing');
@@ -23,5 +23,11 @@ class TestCase extends Orchestra
             'database' => ':memory:',
             'prefix' => '',
         ]);
+
+        // Set up telemetry config
+        $app['config']->set('telemetry-reporter.enabled', true);
+        $app['config']->set('telemetry-reporter.server_url', 'http://example.com/api/telemetry');
+        $app['config']->set('telemetry-reporter.app_host', 'test-host');
+        $app['config']->set('telemetry-reporter.cache_store', 'array');
     }
 }

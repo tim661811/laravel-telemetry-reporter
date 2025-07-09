@@ -45,8 +45,8 @@
         }
     },
     "scripts": {
-        "post-autoload-dump": "if [[ \"${CI:-false}\" == \"false\" ]]; then @composer run prepare; fi",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi || true",
+        "post-autoload-dump": "@composer run prepare || echo 'Skipping prepare script'",
+        "prepare": "@php -d memory_limit=-1 vendor/bin/testbench package:discover --ansi || echo 'Package discovery failed but continuing'",
         "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
