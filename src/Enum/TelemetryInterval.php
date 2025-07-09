@@ -1,6 +1,7 @@
 <?php
 
 namespace Tim661811\LaravelTelemetryReporter\Enum;
+
 enum TelemetryInterval: int
 {
     case OneMinute = 60;

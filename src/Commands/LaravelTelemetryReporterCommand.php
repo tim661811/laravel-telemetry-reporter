@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use ReflectionClass;
+use Throwable;
 use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryData;
 
 class LaravelTelemetryReporterCommand extends Command
@@ -19,13 +20,13 @@ class LaravelTelemetryReporterCommand extends Command
 
     public function handle(): int
     {
-        if (! config('telemetry.enabled')) {
+        if (! config('telemetry-reporter.enabled')) {
             return 0;
         }
 
-        $host = config('telemetry.app_host', config('app.url'));
-        $serverUrl = config('telemetry.server_url');
-        $cacheStore = config('telemetry.cache_store', null);
+        $host = config('telemetry-reporter.app_host', config('app.url'));
+        $serverUrl = config('telemetry-reporter.server_url');
+        $cacheStore = config('telemetry-reporter.cache_store');
 
         $payload = [
             'host' => $host,
@@ -38,7 +39,7 @@ class LaravelTelemetryReporterCommand extends Command
             try {
                 $instance = app()->make($abstract);
                 $this->collectTelemetry($instance, $payload['data'], $cacheStore);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Skip if we can't instantiate
                 continue;
             }
@@ -60,7 +61,7 @@ class LaravelTelemetryReporterCommand extends Command
             try {
                 $object = App::make($class);
                 $this->collectTelemetry($object, $payload['data'], $cacheStore);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 continue;
             }
         }

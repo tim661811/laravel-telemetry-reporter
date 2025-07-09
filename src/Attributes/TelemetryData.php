@@ -15,7 +15,7 @@ class TelemetryData
         ?int $interval = null,
         ?string $key = null,
     ) {
-        $this->interval = $interval ?? config('telemetry.default_interval');
+        $this->interval = $interval ?? config('telemetry-reporter.default_interval');
         $this->key = $key;
     }
 }
