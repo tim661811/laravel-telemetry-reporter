@@ -39,6 +39,13 @@ jobs:
               - php: 8.4
                 laravel: 10.*
                 stability: prefer-lowest
+              # PHP 8.3 with Laravel 10 and prefer-lowest can be problematic
+              - php: 8.3
+                laravel: 10.*
+                stability: prefer-lowest
+              - php: 8.4
+                laravel: 10.*
+                stability: prefer-lowest
 
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
@@ -63,6 +70,8 @@ jobs:
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           composer require "pestphp/pest:^${{ matrix.pest_version }}.0" "pestphp/pest-plugin-laravel:^${{ matrix.pest_version }}.0" "pestphp/pest-plugin-arch:^${{ matrix.pest_version }}.0" --dev --no-interaction --no-update
+          # Remove orchestra/canvas if present to avoid compatibility issues
+          composer remove orchestra/canvas --dev --no-interaction --no-update || true
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: List Installed Dependencies
