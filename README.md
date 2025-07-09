@@ -1,20 +1,13 @@
 # Laravel telemetry reporter
-A reusable Laravel 10+ package that lets you annotate any service method with a PHP attribute to collect custom telemetry (e.g. user counts, disk usage, feature flags) and automatically report it—at configurable intervals—to a central server over HTTP. Data is grouped per application host, is fully configurable via a published telemetry.php config (backed by your chosen cache), and integrates seamlessly with Laravel’s scheduler and HTTP client.
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/tim661811/laravel-telemetry-reporter.svg?style=flat-square)](https://packagist.org/packages/tim661811/laravel-telemetry-reporter)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/tim661811/laravel-telemetry-reporter/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/tim661811/laravel-telemetry-reporter/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/tim661811/laravel-telemetry-reporter/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/tim661811/laravel-telemetry-reporter/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/tim661811/laravel-telemetry-reporter.svg?style=flat-square)](https://packagist.org/packages/tim661811/laravel-telemetry-reporter)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
-
-## Support us
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel-telemetry-reporter.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel-telemetry-reporter)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+A reusable Laravel 10+ package that lets you annotate any service method with a PHP attribute to collect custom telemetry (e.g. user counts, disk usage, feature flags) and automatically report it—at
+configurable intervals—to a central server over HTTP. Data is grouped per application host, is fully configurable via a published telemetry.php config (backed by your chosen cache), and integrates
+seamlessly with Laravel’s scheduler and HTTP client.
 
 ## Installation
 
@@ -24,38 +17,78 @@ You can install the package via composer:
 composer require tim661811/laravel-telemetry-reporter
 ```
 
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --tag="laravel-telemetry-reporter-migrations"
-php artisan migrate
-```
-
 You can publish the config file with:
 
 ```bash
 php artisan vendor:publish --tag="laravel-telemetry-reporter-config"
 ```
 
-This is the contents of the published config file:
+These are the contents of the published config file:
 
 ```php
+<?php
+
+use Tim661811\LaravelTelemetryReporter\Enum\TelemetryInterval;
+
 return [
+    'enabled' => env('TELEMETRY_ENABLED', true),
+    'server_url' => env('TELEMETRY_SERVER_URL', 'localhost'),
+    'app_host' => env('APP_HOST', 'localhost'),
+
+    // How often the artisan command may fire (in minutes)
+    'command_interval_minutes' => env('TELEMETRY_COMMAND_INTERVAL', 60),
+
+    // Which cache store to use for last-run timestamps (null = default)
+    'cache_store' => env('TELEMETRY_CACHE_STORE', 'file'),
+
+    // Default interval for methods without an explicit interval
+    'default_interval' => TelemetryInterval::OneDay->value,
 ];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="laravel-telemetry-reporter-views"
 ```
 
 ## Usage
 
+1. First, annotate your service methods with the telemetry attribute:
+
 ```php
-$laravelTelemetryReporter = new Tim661811\LaravelTelemetryReporter();
-echo $laravelTelemetryReporter->echoPhrase('Hello, Tim661811!');
+namespace App\Services;
+
+use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryData;
+use Tim661811\LaravelTelemetryReporter\Enum\TelemetryInterval;
+
+class UserService
+{
+    #[TelemetryData(key: 'user_count', interval: TelemetryInterval::OneHour->value)]
+    public function getTotalUsers(): int
+    {
+        return User::count();
+    }
+
+    #[TelemetryData(key: 'storage_usage')]
+    public function getDiskUsage(): float
+    {
+        // This will use the default interval from config (One day by default)
+        return Storage::size('uploads') / 1024 / 1024; // MB
+    }
+
+    #[TelemetryData]
+    public function getActiveUsersCount(): int
+    {
+        // When no key is specified, the fully qualified class name and method name
+        // are used as the key (e.g. 'App\Services\UserService@getActiveUsersCount')
+        // This also uses the default interval from config (OneDay)
+        return User::where('last_active_at', '>', now()->subDays(7))->count();
+    }
+}
 ```
+
+2. That's it! The package automatically schedules the telemetry reporting command through its service provider. No additional configuration is needed for scheduling.
+
+> **Important Note**: While you can specify any interval for your telemetry collectors, the minimum effective interval is 60 seconds (OneMinute). This is because the scheduled command in the service
+> provider runs every minute. Setting an interval lower than 60 seconds will still work, but data collection will only happen at one-minute intervals at most.
+>
+> For convenience, the package provides a `TelemetryInterval` enum with commonly used time intervals (OneMinute, FiveMinutes, OneHour, OneDay, etc.). You can use these values or specify your own
+> custom interval in seconds.
 
 ## Testing
 
@@ -67,18 +100,9 @@ composer test
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
 ## Credits
 
 - [Tim van de Ven](https://github.com/tim661811)
-- [All Contributors](../../contributors)
 
 ## License
 

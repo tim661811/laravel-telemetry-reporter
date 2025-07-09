@@ -16,38 +16,38 @@
         }
     ],
     "require": {
-        "php": "^8.4",
+        "php": "^8.1",
+        "illuminate/contracts": "^10.0 || ^11.0 || ^12.0",
+        "composer/class-map-generator": "^1.6",
         "spatie/laravel-package-tools": "^1.16",
-        "illuminate/contracts": "^10.0||^11.0||^12.0"
+        "guzzlehttp/guzzle": "^7.5"
     },
     "require-dev": {
         "laravel/pint": "^1.14",
         "nunomaduro/collision": "^8.1.1||^7.10.0",
         "larastan/larastan": "^2.9||^3.0",
-        "orchestra/testbench": "^10.0.0||^9.0.0||^8.22.0",
-        "pestphp/pest": "^3.0",
-        "pestphp/pest-plugin-arch": "^3.0",
-        "pestphp/pest-plugin-laravel": "^3.0",
+        "orchestra/testbench": "^10.0||^9.0||^8.24",
+        "pestphp/pest": "^2.0||^3.0",
+        "pestphp/pest-plugin-arch": "^2.0||^3.0",
+        "pestphp/pest-plugin-laravel": "^2.0||^3.0",
         "phpstan/extension-installer": "^1.3||^2.0",
         "phpstan/phpstan-deprecation-rules": "^1.1||^2.0",
         "phpstan/phpstan-phpunit": "^1.3||^2.0"
     },
     "autoload": {
         "psr-4": {
-            "Tim661811\\LaravelTelemetryReporter\\": "src/",
-            "Tim661811\\LaravelTelemetryReporter\\Database\\Factories\\": "database/factories/"
+            "Tim661811\\LaravelTelemetryReporter\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tim661811\\LaravelTelemetryReporter\\Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/"
+            "Tim661811\\LaravelTelemetryReporter\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "post-autoload-dump": "@composer run prepare",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "analyse": "vendor/bin/phpstan analyse",
+        "post-autoload-dump": "@composer run prepare || echo 'Skipping prepare script'",
+        "prepare": "@php -d memory_limit=-1 vendor/bin/testbench package:discover --ansi || echo 'Package discovery failed but continuing'",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint"

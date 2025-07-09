@@ -1,3 +1,12 @@
-# Changelog
+### 📝 CHANGELOG
 
-All notable changes to `laravel-telemetry-reporter` will be documented in this file.
+## 2025.1 (Unreleased)
+
+### Added
+
+- `#[TelemetryData]` attribute for tagging methods with telemetry metadata
+- Automatic classmap-based discovery of telemetry methods
+- Artisan command `telemetry:report` to collect & send telemetry
+- Automatically scheduled telemetry report command using the service provider
+- Config file for enabling, interval control, cache store, and server URL
+- Pest tests for attribute and reporting logic
