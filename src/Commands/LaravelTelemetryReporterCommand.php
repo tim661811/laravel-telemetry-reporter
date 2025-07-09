@@ -50,22 +50,27 @@ class LaravelTelemetryReporterCommand extends Command
         $classMap = ClassMapGenerator::createMap($appPath);
 
         foreach ($classMap as $class => $file) {
-            if (! class_exists($class)) {
-                continue;
+            // 1) If PHP doesn’t know about this class, pull in the file directly
+            if (! class_exists($class, false)) {
+                @require_once $file;
             }
-            $ref = new ReflectionClass($class);
-            if (! $ref->isInstantiable()) {
+
+            // 2) Now skip anything still missing or not instantiable
+            if (! class_exists($class) || ! (new ReflectionClass($class))->isInstantiable()) {
                 continue;
             }
 
+            // 3) Finally, resolve via the container and collect
             try {
                 $object = App::make($class);
                 $this->collectTelemetry($object, $payload['data'], $cacheStore);
             } catch (Throwable $e) {
+                // swallow any errors and move on
                 continue;
             }
         }
 
+        dump($payload);
         if (count($payload['data'])) {
             Http::post($serverUrl, $payload);
             $this->info("Telemetry posted to {$serverUrl}");
