@@ -2,9 +2,9 @@
 
 namespace Tim661811\LaravelTelemetryReporter\Commands;
 
-use Carbon\Carbon;
-use Composer\Autoload\ClassMapGenerator;
+use Composer\ClassMapGenerator\ClassMapGenerator;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -33,7 +33,18 @@ class LaravelTelemetryReporterCommand extends Command
             'data' => [],
         ];
 
-        // Auto‑discover all classes in app/ via Composer’s class map
+        // First check all bound instances in the container
+        foreach (app()->getBindings() as $abstract => $binding) {
+            try {
+                $instance = app()->make($abstract);
+                $this->collectTelemetry($instance, $payload['data'], $cacheStore);
+            } catch (\Throwable $e) {
+                // Skip if we can't instantiate
+                continue;
+            }
+        }
+
+        // Then check classes in app/ directory
         $appPath = App::path();
         $classMap = ClassMapGenerator::createMap($appPath);
 
@@ -46,8 +57,12 @@ class LaravelTelemetryReporterCommand extends Command
                 continue;
             }
 
-            $object = App::make($class);
-            $this->collectTelemetry($object, $payload['data'], $cacheStore);
+            try {
+                $object = App::make($class);
+                $this->collectTelemetry($object, $payload['data'], $cacheStore);
+            } catch (\Throwable $e) {
+                continue;
+            }
         }
 
         if (count($payload['data'])) {
@@ -78,7 +93,7 @@ class LaravelTelemetryReporterCommand extends Command
             $now = now();
 
             // Only run if interval has elapsed
-            if ($lastRun && Carbon::parse($lastRun)->add($config->interval)->gt($now)) {
+            if ($lastRun && Carbon::parse($lastRun)->addMinutes($config->interval)->gt($now)) {
                 continue;
             }
 
@@ -86,7 +101,7 @@ class LaravelTelemetryReporterCommand extends Command
             $result = $method->invoke($object);
             $data[$key] = $result;
 
-            // Update last‐run timestamp
+            // Update last-run timestamp
             Cache::store($cacheStore)
                 ->put($cacheKey, $now->toIso8601ZuluString());
         }
