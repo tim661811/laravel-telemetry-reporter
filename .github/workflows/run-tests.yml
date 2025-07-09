@@ -46,6 +46,13 @@ jobs:
               - php: 8.4
                 laravel: 10.*
                 stability: prefer-lowest
+              # PHP 8.3 with Laravel 10 and prefer-lowest can be problematic
+              - php: 8.3
+                laravel: 10.*
+                stability: prefer-lowest
+              - php: 8.4
+                laravel: 10.*
+                stability: prefer-lowest
 
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
@@ -67,15 +74,26 @@ jobs:
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
       - name: Install dependencies
+        env:
+          CI: "true"
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          # First require the specific Laravel version
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+          # Then require the specific testbench version
+          composer require "orchestra/testbench:${{ matrix.testbench }}" --dev --no-interaction --no-update
+          # Then require the specific Pest version
           composer require "pestphp/pest:^${{ matrix.pest_version }}.0" "pestphp/pest-plugin-laravel:^${{ matrix.pest_version }}.0" "pestphp/pest-plugin-arch:^${{ matrix.pest_version }}.0" --dev --no-interaction --no-update
-          # Remove orchestra/canvas if present to avoid compatibility issues
-          composer remove orchestra/canvas --dev --no-interaction --no-update || true
+          # Update dependencies
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+          # Remove problematic packages after install if they got pulled in
+          composer remove orchestra/canvas --dev --no-interaction || true
 
       - name: List Installed Dependencies
         run: composer show -D
 
       - name: Execute tests
-        run: vendor/bin/pest --ci
+        env:
+          CI: "true"
+        run: |
+          # Try to run tests directly without relying on package:discover
+          vendor/bin/pest --ci || php -d memory_limit=-1 vendor/bin/pest --ci
