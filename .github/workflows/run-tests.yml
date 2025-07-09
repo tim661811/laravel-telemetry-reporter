@@ -34,6 +34,11 @@ jobs:
           - laravel: 10.*
             testbench: 8.*
             pest_version: 2
+            exclude:
+              # PHP 8.4 with Laravel 10 and prefer-lowest can be problematic
+              - php: 8.4
+                laravel: 10.*
+                stability: prefer-lowest
 
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}

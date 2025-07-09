@@ -71,8 +71,14 @@ class LaravelTelemetryReporterCommand extends Command
         }
 
         if (count($payload['data'])) {
-            Http::post($serverUrl, $payload);
-            $this->info("Telemetry posted to {$serverUrl}");
+            try {
+                Http::post($serverUrl, $payload);
+                $this->info("Telemetry posted to {$serverUrl}");
+            } catch (Throwable $e) {
+                $this->error("Failed to post telemetry: {$e->getMessage()}");
+
+                return 1;
+            }
         }
 
         return 0;
