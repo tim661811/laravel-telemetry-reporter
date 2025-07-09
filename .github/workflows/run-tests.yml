@@ -27,13 +27,13 @@ jobs:
         include:
           - laravel: 12.*
             testbench: 10.*
-            pest: pest:^3.0 pest-plugin-laravel:^3.0 pest-plugin-arch:^3.0
+            pest_version: 3
           - laravel: 11.*
             testbench: 9.*
-            pest: pest:^3.0 pest-plugin-laravel:^3.0 pest-plugin-arch:^3.0
+            pest_version: 3
           - laravel: 10.*
             testbench: 8.*
-            pest: pest:^2.0 pest-plugin-laravel:^2.0 pest-plugin-arch:^2.0
+            pest_version: 2
 
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
@@ -56,7 +56,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" ${{ matrix.pest }} --no-interaction --no-update
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer require "pestphp/pest:^${{ matrix.pest_version }}.0" "pestphp/pest-plugin-laravel:^${{ matrix.pest_version }}.0" "pestphp/pest-plugin-arch:^${{ matrix.pest_version }}.0" --dev --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: List Installed Dependencies
