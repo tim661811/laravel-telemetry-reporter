@@ -1,6 +1,6 @@
 ### 📝 CHANGELOG
 
-## 2025.1 (Unreleased)
+## 0.1 (2025-07-09)
 
 ### Added
 
