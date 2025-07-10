@@ -9,6 +9,14 @@ A reusable Laravel 10+ package that lets you annotate any service method with a 
 configurable intervals—to a central server over HTTP. Data is grouped per application host, is fully configurable via a published telemetry.php config (backed by your chosen cache), and integrates
 seamlessly with Laravel’s scheduler and HTTP client.
 
+## Roadmap
+
+This package is currently in early development (version 0.x) and new features, improvements, and breaking changes may be introduced before the 1.0 stable release.
+
+You can follow planned features, milestones, and upcoming enhancements in the [Roadmap](ROADMAP.md) file.
+
+If you'd like to contribute ideas or help implement features, feel free to open an issue or pull request!
+
 ## Installation
 
 You can install the package via composer:
