@@ -98,7 +98,7 @@ class LaravelTelemetryReporterCommand extends Command
             $config = $attrs[0]->newInstance();
             $key = $config->key
                 ?? $reflect->getName().'@'.$method->getName();
-            $cacheKey = "telemetry:last:{$key}";
+            $cacheKey = "laravel-telemetry-reporter:{$key}:last-run-time";
 
             $lastRun = Cache::store($cacheStore)->get($cacheKey);
             $now = now();

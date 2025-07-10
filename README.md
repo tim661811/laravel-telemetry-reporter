@@ -9,6 +9,14 @@ A reusable Laravel 10+ package that lets you annotate any service method with a 
 configurable intervals—to a central server over HTTP. Data is grouped per application host, is fully configurable via a published telemetry.php config (backed by your chosen cache), and integrates
 seamlessly with Laravel’s scheduler and HTTP client.
 
+## Roadmap
+
+This package is currently in early development (version 0.x) and new features, improvements, and breaking changes may be introduced before the 1.0 stable release.
+
+You can follow planned features, milestones, and upcoming enhancements in the [Roadmap](ROADMAP.md) file.
+
+If you'd like to contribute ideas or help implement features, feel free to open an issue or pull request!
+
 ## Installation
 
 You can install the package via composer:
@@ -20,7 +28,7 @@ composer require tim661811/laravel-telemetry-reporter
 You can publish the config file with:
 
 ```bash
-php artisan vendor:publish --tag="laravel-telemetry-reporter-config"
+php artisan vendor:publish --tag="telemetry-reporter-config"
 ```
 
 These are the contents of the published config file:
@@ -34,9 +42,6 @@ return [
     'enabled' => env('TELEMETRY_ENABLED', true),
     'server_url' => env('TELEMETRY_SERVER_URL', 'localhost'),
     'app_host' => env('APP_HOST', 'localhost'),
-
-    // How often the artisan command may fire (in minutes)
-    'command_interval_minutes' => env('TELEMETRY_COMMAND_INTERVAL', 60),
 
     // Which cache store to use for last-run timestamps (null = default)
     'cache_store' => env('TELEMETRY_CACHE_STORE', 'file'),
@@ -58,7 +63,7 @@ use Tim661811\LaravelTelemetryReporter\Enum\TelemetryInterval;
 
 class UserService
 {
-    #[TelemetryData(key: 'user_count', interval: TelemetryInterval::OneHour->value)]
+    #[TelemetryData(key: 'user_count', interval: TelemetryInterval::OneHour)]
     public function getTotalUsers(): int
     {
         return User::count();
@@ -84,11 +89,11 @@ class UserService
 
 2. That's it! The package automatically schedules the telemetry reporting command through its service provider. No additional configuration is needed for scheduling.
 
-> **Important Note**: While you can specify any interval for your telemetry collectors, the minimum effective interval is 60 seconds (OneMinute). This is because the scheduled command in the service
-> provider runs every minute. Setting an interval lower than 60 seconds will still work, but data collection will only happen at one-minute intervals at most.
+> **Important Note**: While you can specify any interval for your telemetry collectors, the minimum effective interval is 15 minutes (FifteenMinutes). This is because the scheduled command in the
+> service provider runs every 15 minutes. Setting an interval lower than 900 seconds will still work, but data collection will only happen at 15-minute intervals at most.
 >
-> For convenience, the package provides a `TelemetryInterval` enum with commonly used time intervals (OneMinute, FiveMinutes, OneHour, OneDay, etc.). You can use these values or specify your own
-> custom interval in seconds.
+> For convenience, the package provides a `TelemetryInterval` enum with commonly used time intervals (FifteenMinutes, ThirtyMinutes, OneHour, OneDay, etc.). You can use these values or specify your
+> own custom interval in seconds.
 
 ## Testing
 

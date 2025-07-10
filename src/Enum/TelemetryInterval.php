@@ -4,8 +4,6 @@ namespace Tim661811\LaravelTelemetryReporter\Enum;
 
 enum TelemetryInterval: int
 {
-    case OneMinute = 60;
-    case FiveMinutes = 300;
     case FifteenMinutes = 900;
     case ThirtyMinutes = 1800;
     case FortyFiveMinutes = 2700;
@@ -22,8 +20,6 @@ enum TelemetryInterval: int
     public function label(): string
     {
         return match ($this) {
-            self::OneMinute => '1 minute',
-            self::FiveMinutes => '5 minutes',
             self::FifteenMinutes => '15 minutes',
             self::ThirtyMinutes => '30 minutes',
             self::FortyFiveMinutes => '45 minutes',
