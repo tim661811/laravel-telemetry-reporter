@@ -5,7 +5,8 @@ namespace Tim661811\LaravelTelemetryReporter;
 use Illuminate\Console\Scheduling\Schedule;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Tim661811\LaravelTelemetryReporter\Commands\LaravelTelemetryReporterCommand;
+use Tim661811\LaravelTelemetryReporter\Commands\ListTelemetryDefinitionsCommand;
+use Tim661811\LaravelTelemetryReporter\Commands\ReportTelemetryCommand;
 
 class LaravelTelemetryReporterServiceProvider extends PackageServiceProvider
 {
@@ -19,7 +20,8 @@ class LaravelTelemetryReporterServiceProvider extends PackageServiceProvider
         $package
             ->name('laravel-telemetry-reporter')
             ->hasConfigFile()
-            ->hasCommand(LaravelTelemetryReporterCommand::class);
+            ->hasCommand(ReportTelemetryCommand::class)
+            ->hasCommand(ListTelemetryDefinitionsCommand::class);
     }
 
     public function bootingPackage(): void

@@ -1,6 +1,12 @@
 ### 📝 CHANGELOG
 
-### 📝 CHANGELOG
+## 0.2 (2025-07-10)
+
+### Added
+
+* New Artisan command `telemetry:list` to display all registered telemetry data collectors with their keys, classes, methods, and intervals for easier inspection and debugging.
+* Configuration option `verbose_logging` to enable verbose output of telemetry payloads before sending, helping diagnose issues and verify data integrity.
+* Added `telemetry:send` as an alias for the existing `telemetry:report` Artisan command for improved usability.
 
 ## 0.1.1 (2025-07-10)
 

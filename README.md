@@ -48,6 +48,12 @@ return [
 
     // Default interval for methods without an explicit interval
     'default_interval' => TelemetryInterval::OneDay->value,
+    
+    /*
+     * Enable verbose logging of telemetry payloads before sending.
+     * Useful for debugging and verifying payload content.
+     */
+    'verbose_logging' => env('TELEMETRY_VERBOSE_LOGGING', false),
 ];
 ```
 
@@ -55,51 +61,80 @@ return [
 
 1. First, annotate your service methods with the telemetry attribute:
 
-```php
-namespace App\Services;
-
-use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryData;
-use Tim661811\LaravelTelemetryReporter\Enum\TelemetryInterval;
-
-class UserService
-{
-    #[TelemetryData(key: 'user_count', interval: TelemetryInterval::OneHour)]
-    public function getTotalUsers(): int
+    ```php
+    namespace App\Services;
+    
+    use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryData;
+    use Tim661811\LaravelTelemetryReporter\Enum\TelemetryInterval;
+    
+    class UserService
     {
-        return User::count();
+        #[TelemetryData(key: 'user_count', interval: TelemetryInterval::OneHour)]
+        public function getTotalUsers(): int
+        {
+            return User::count();
+        }
+    
+        #[TelemetryData(key: 'storage_usage')]
+        public function getDiskUsage(): float
+        {
+            // This will use the default interval from config (One day by default)
+            return Storage::size('uploads') / 1024 / 1024; // MB
+        }
+    
+        #[TelemetryData]
+        public function getActiveUsersCount(): int
+        {
+            // When no key is specified, the fully qualified class name and method name
+            // are used as the key (e.g. 'App\Services\UserService@getActiveUsersCount')
+            // This also uses the default interval from config (OneDay)
+            return User::where('last_active_at', '>', now()->subDays(7))->count();
+        }
     }
-
-    #[TelemetryData(key: 'storage_usage')]
-    public function getDiskUsage(): float
-    {
-        // This will use the default interval from config (One day by default)
-        return Storage::size('uploads') / 1024 / 1024; // MB
-    }
-
-    #[TelemetryData]
-    public function getActiveUsersCount(): int
-    {
-        // When no key is specified, the fully qualified class name and method name
-        // are used as the key (e.g. 'App\Services\UserService@getActiveUsersCount')
-        // This also uses the default interval from config (OneDay)
-        return User::where('last_active_at', '>', now()->subDays(7))->count();
-    }
-}
-```
+    ```
 
 2. That's it! The package automatically schedules the telemetry reporting command through its service provider. No additional configuration is needed for scheduling.
 
-> **Important Note**: While you can specify any interval for your telemetry collectors, the minimum effective interval is 15 minutes (FifteenMinutes). This is because the scheduled command in the
-> service provider runs every 15 minutes. Setting an interval lower than 900 seconds will still work, but data collection will only happen at 15-minute intervals at most.
->
-> For convenience, the package provides a `TelemetryInterval` enum with commonly used time intervals (FifteenMinutes, ThirtyMinutes, OneHour, OneDay, etc.). You can use these values or specify your
-> own custom interval in seconds.
+   > **Important Note**: While you can specify any interval for your telemetry collectors, the minimum effective interval is 15 minutes (FifteenMinutes). This is because the scheduled command in the
+   > service provider runs every 15 minutes. Setting an interval lower than 900 seconds will still work, but data collection will only happen at 15-minute intervals at most.
+   >
+   > For convenience, the package provides a `TelemetryInterval` enum with commonly used time intervals (FifteenMinutes, ThirtyMinutes, OneHour, OneDay, etc.). You can use these values or specify your
+   > own custom interval in seconds.
 
-## Testing
+## Available Artisan Commands
+
+### `telemetry:report` (alias: `telemetry:send`)
+
+Collects telemetry data from all registered collectors and sends it to the configured central server over HTTP.
+
+This command runs automatically by the package’s scheduler integration, but you can also run it manually for testing or immediate reporting:
 
 ```bash
-composer test
+php artisan telemetry:report
 ```
+
+### `telemetry:list`
+
+Lists all registered telemetry data collectors detected in your application, showing their:
+
+* Telemetry key (custom or default generated)
+* Class name
+* Method name
+* Reporting interval (in minutes)
+
+Use this command to verify which telemetry methods are active and configured:
+
+```bash
+php artisan telemetry:list
+```
+
+Sample output:
+
+| Key                                            | Class                      | Method                | Interval (minutes) |
+|------------------------------------------------|----------------------------|-----------------------|--------------------|
+| `user_count`                                   | `App\Services\UserService` | `getTotalUsers`       | 60                 |
+| `storage_usage`                                | `App\Services\UserService` | `getDiskUsage`        | 1440               |
+| `App\Services\UserService@getActiveUsersCount` | `App\Services\UserService` | `getActiveUsersCount` | 1440               |
 
 ## Changelog
 
