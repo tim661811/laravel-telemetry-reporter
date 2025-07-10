@@ -14,14 +14,20 @@ class TelemetryHelper
 {
     protected string $cacheStore;
 
-    public function __construct()
+    /**
+     * @var array|string[] Directories to scan for telemetry classes
+     */
+    private array $paths;
+
+    public function __construct(array $extraPaths = [])
     {
         $this->cacheStore = config('telemetry-reporter.cache_store');
+        $this->paths = array_merge([App::path()], $extraPaths);
     }
 
     public function collect(callable $callback): void
     {
-        // 1. Bound instances
+        // 1. Bound instances in Laravel container
         foreach (app()->getBindings() as $abstract => $binding) {
             try {
                 $instance = app()->make($abstract);
@@ -31,23 +37,29 @@ class TelemetryHelper
             }
         }
 
-        // 2. app/ directory classes
-        $classMap = ClassMapGenerator::createMap(App::path());
-
-        foreach ($classMap as $class => $file) {
-            if (! class_exists($class, false)) {
-                @require_once $file;
-            }
-
-            if (! class_exists($class) || ! (new ReflectionClass($class))->isInstantiable()) {
+        // 2. Classes from the specified paths (including test stubs)
+        foreach ($this->paths as $path) {
+            if (! is_dir($path)) {
                 continue;
             }
 
-            try {
-                $object = App::make($class);
-                $this->inspect($object, $callback);
-            } catch (Throwable) {
-                continue;
+            $classMap = ClassMapGenerator::createMap($path);
+
+            foreach ($classMap as $class => $file) {
+                if (! class_exists($class, false)) {
+                    @require_once $file;
+                }
+
+                if (! class_exists($class) || ! (new ReflectionClass($class))->isInstantiable()) {
+                    continue;
+                }
+
+                try {
+                    $object = App::make($class);
+                    $this->inspect($object, $callback);
+                } catch (Throwable) {
+                    continue;
+                }
             }
         }
     }
