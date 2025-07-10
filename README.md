@@ -20,7 +20,7 @@ composer require tim661811/laravel-telemetry-reporter
 You can publish the config file with:
 
 ```bash
-php artisan vendor:publish --tag="laravel-telemetry-reporter-config"
+php artisan vendor:publish --tag="telemetry-reporter-config"
 ```
 
 These are the contents of the published config file:
