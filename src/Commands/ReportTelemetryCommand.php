@@ -29,6 +29,11 @@ class ReportTelemetryCommand extends Command
             'data' => $collector->collectData(),
         ];
 
+        if (config('telemetry-reporter.verbose_logging')) {
+            $this->info('Telemetry payload:');
+            $this->line(json_encode($payload, JSON_PRETTY_PRINT));
+        }
+
         if (count($payload['data'])) {
             try {
                 Http::post($serverUrl, $payload);

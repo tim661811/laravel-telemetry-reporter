@@ -12,4 +12,10 @@ return [
 
     // Default interval for methods without an explicit interval
     'default_interval' => TelemetryInterval::OneDay->value,
+
+    /*
+     * Enable verbose logging of telemetry payloads before sending.
+     * Useful for debugging and verifying payload content.
+     */
+    'verbose_logging' => env('TELEMETRY_VERBOSE_LOGGING', false),
 ];
