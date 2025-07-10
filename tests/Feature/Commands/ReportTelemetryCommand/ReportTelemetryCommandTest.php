@@ -11,6 +11,16 @@ beforeEach(function () {
     Cache::flush();
 });
 
+it('runs telemetry:report command successfully', function () {
+    $exitCode = Artisan::call('telemetry:report');
+    expect($exitCode)->toBe(0);
+});
+
+it('runs telemetry:send alias command successfully', function () {
+    $exitCode = Artisan::call('telemetry:send');
+    expect($exitCode)->toBe(0);
+});
+
 it('does not send HTTP when no telemetry methods are present', function () {
     Http::fake();
     Artisan::call('telemetry:report');

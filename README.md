@@ -103,7 +103,7 @@ return [
 
 ## Available Artisan Commands
 
-### `telemetry:report`
+### `telemetry:report` (alias: `telemetry:send`)
 
 Collects telemetry data from all registered collectors and sends it to the configured central server over HTTP.
 

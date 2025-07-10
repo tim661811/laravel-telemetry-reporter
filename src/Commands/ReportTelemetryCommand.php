@@ -11,6 +11,8 @@ class ReportTelemetryCommand extends Command
 {
     protected $signature = 'telemetry:report';
 
+    protected $aliases = ['telemetry:send'];
+
     protected $description = 'Collect and send telemetry data to central server';
 
     public function handle(): int
