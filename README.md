@@ -58,7 +58,7 @@ use Tim661811\LaravelTelemetryReporter\Enum\TelemetryInterval;
 
 class UserService
 {
-    #[TelemetryData(key: 'user_count', interval: TelemetryInterval::OneHour->value)]
+    #[TelemetryData(key: 'user_count', interval: TelemetryInterval::OneHour)]
     public function getTotalUsers(): int
     {
         return User::count();
@@ -84,11 +84,11 @@ class UserService
 
 2. That's it! The package automatically schedules the telemetry reporting command through its service provider. No additional configuration is needed for scheduling.
 
-> **Important Note**: While you can specify any interval for your telemetry collectors, the minimum effective interval is 60 seconds (OneMinute). This is because the scheduled command in the service
-> provider runs every minute. Setting an interval lower than 60 seconds will still work, but data collection will only happen at one-minute intervals at most.
+> **Important Note**: While you can specify any interval for your telemetry collectors, the minimum effective interval is 15 minutes (FifteenMinutes). This is because the scheduled command in the
+> service provider runs every 15 minutes. Setting an interval lower than 900 seconds will still work, but data collection will only happen at 15-minute intervals at most.
 >
-> For convenience, the package provides a `TelemetryInterval` enum with commonly used time intervals (OneMinute, FiveMinutes, OneHour, OneDay, etc.). You can use these values or specify your own
-> custom interval in seconds.
+> For convenience, the package provides a `TelemetryInterval` enum with commonly used time intervals (FifteenMinutes, ThirtyMinutes, OneHour, OneDay, etc.). You can use these values or specify your
+> own custom interval in seconds.
 
 ## Testing
 

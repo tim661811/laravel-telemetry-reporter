@@ -28,7 +28,7 @@ class LaravelTelemetryReporterServiceProvider extends PackageServiceProvider
         $this->app->booted(function () {
             $this->app->make(Schedule::class)
                 ->command('telemetry:report')
-                ->everyMinute()     // internally gated by cache
+                ->everyFifteenMinutes()     // internally gated by cache
                 ->name('telemetry:report');
         });
     }
