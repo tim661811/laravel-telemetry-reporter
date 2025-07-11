@@ -23,6 +23,8 @@ class ReportTelemetryCommand extends Command
 
         $host = config('telemetry-reporter.app_host', config('app.url'));
         $serverUrl = config('telemetry-reporter.server_url');
+        $authToken = config('telemetry-reporter.auth_token');
+        $customHeaders = config('telemetry-reporter.custom_headers', []);
 
         $collector = new TelemetryHelper;
         $payload = [
@@ -38,7 +40,17 @@ class ReportTelemetryCommand extends Command
 
         if (count($payload['data'])) {
             try {
-                Http::post($serverUrl, $payload);
+                $headers = [
+                    'Accept' => 'application/json',
+                ];
+
+                if ($authToken) {
+                    $headers['Authorization'] = 'Bearer '.$authToken;
+                }
+                $headers = array_merge($headers, $customHeaders);
+
+                Http::withHeaders($headers)->post($serverUrl, $payload);
+
                 $this->info("Telemetry posted to {$serverUrl}");
             } catch (Throwable $e) {
                 $this->error("Failed to post telemetry: {$e->getMessage()}");

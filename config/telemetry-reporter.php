@@ -18,4 +18,9 @@ return [
      * Useful for debugging and verifying payload content.
      */
     'verbose_logging' => env('TELEMETRY_VERBOSE_LOGGING', false),
+
+    'auth_token' => env('TELEMETRY_AUTH_TOKEN'),
+    'custom_headers' => [
+        // 'X-My-Custom-Header' => 'value',
+    ],
 ];
