@@ -26,6 +26,10 @@ return [
      */
     'verbose_logging' => env('TELEMETRY_VERBOSE_LOGGING', false),
 
+    // Optional URL to fetch authentication token from.
+    // If set, the package will automatically fetch & cache the token before sending telemetry.
+    'auth_token_url' => env('TELEMETRY_AUTH_TOKEN_URL'),
+
     // Optional bearer token used for authenticating telemetry requests.
     // Sent in the Authorization header as "Bearer <token>".
     'auth_token' => env('TELEMETRY_AUTH_TOKEN'),

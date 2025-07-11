@@ -62,6 +62,10 @@ return [
      */
     'verbose_logging' => env('TELEMETRY_VERBOSE_LOGGING', false),
 
+    // Optional URL to fetch authentication token from.
+    // If set, the package will automatically fetch & cache the token before sending telemetry.
+    'auth_token_url' => env('TELEMETRY_AUTH_TOKEN_URL'),
+
     // Optional bearer token used for authenticating telemetry requests.
     // Sent in the Authorization header as "Bearer <token>".
     'auth_token' => env('TELEMETRY_AUTH_TOKEN'),
@@ -233,6 +237,69 @@ class VerifyTelemetrySignature
 * Signing only ensures the data is untampered and from a trusted client.
 * If signing is enabled but the key or header is not set, the telemetry client will skip signing and log a warning.
 * You can customize the signature header name via configuration.
+
+## 🔑 Automatic Authentication Token Fetching
+
+This package supports an optional **automatic bearer token fetching mechanism** to simplify client authentication with your telemetry server.
+
+### How it works
+
+* Instead of manually configuring a static `auth_token`, you can specify an **authentication URL** (`auth_token_url`) in your config.
+* When enabled, the telemetry reporter will **try fetching a token from this URL before sending telemetry**.
+* The request to the auth endpoint sends the app host as JSON payload (e.g. `{ "host": "your-app-host" }`).
+* If a token is received, it is cached and used in subsequent telemetry requests as the Bearer token.
+* If no token is cached or fetching fails, the telemetry command stops and will try again on the next run.
+* If the telemetry server responds with an authentication error (HTTP 401), the cached token is cleared, and telemetry data caches are invalidated to allow retry.
+
+### Configuration
+
+Add this to your `.env` or config file:
+
+```env
+# URL to fetch a fresh auth token
+TELEMETRY_AUTH_TOKEN_URL=https://your-server.com/api/telemetry/auth-token
+
+# You can still optionally configure a static token fallback here
+TELEMETRY_AUTH_TOKEN=
+
+# Existing options still work as normal
+TELEMETRY_SERVER_URL=https://your-server.com/api/telemetry
+```
+
+In `config/telemetry-reporter.php`:
+
+```php
+'auth_token_url' => env('TELEMETRY_AUTH_TOKEN_URL', null),
+
+'auth_token' => env('TELEMETRY_AUTH_TOKEN', null),
+```
+
+### Behavior
+
+* If `auth_token_url` is set, the package will **try to fetch the token automatically before sending telemetry**.
+* If `auth_token_url` is empty but `auth_token` is set, it will use the static token.
+* If neither are set, telemetry requests will be sent **without authentication**.
+* When a 401 Unauthorized response is received, the cached token and telemetry last-run caches are cleared for automatic retry.
+
+### Server-side Expectations
+
+Your auth endpoint should accept a POST request with JSON payload:
+
+```json
+{
+    "host": "your-app-host"
+}
+```
+
+And respond with JSON:
+
+```json
+{
+    "token": "your-generated-bearer-token"
+}
+```
+
+This allows your server to control and approve telemetry clients dynamically.
 
 ## Changelog
 
