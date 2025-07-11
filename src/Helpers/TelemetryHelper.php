@@ -70,7 +70,8 @@ class TelemetryHelper
 
         foreach ($reflection->getMethods() as $method) {
             $attributes = $method->getAttributes(TelemetryData::class);
-            if (! count($attributes)) {
+
+            if (count($attributes) === 0) {
                 continue;
             }
 

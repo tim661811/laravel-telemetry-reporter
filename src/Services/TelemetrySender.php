@@ -23,7 +23,11 @@ class TelemetrySender
     public function send(string $url, array $payload, array $customHeaders = []): bool
     {
         $headers = ['Accept' => 'application/json'];
-        $token = $this->authTokenManager->getToken();
+        try {
+            $token = $this->authTokenManager->getToken();
+        } catch (Throwable $e) {
+            return false;
+        }
 
         if ($token) {
             $headers['Authorization'] = 'Bearer '.$token;

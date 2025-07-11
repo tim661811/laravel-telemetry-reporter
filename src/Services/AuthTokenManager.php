@@ -11,7 +11,7 @@ class AuthTokenManager
 {
     protected string $cacheStore;
 
-    protected string $cacheKey = 'laravel-telemetry-reporter:auth_token';
+    public static string $CACHE_KEY = 'laravel-telemetry-reporter:auth_token';
 
     public function __construct()
     {
@@ -28,7 +28,8 @@ class AuthTokenManager
             return $staticToken ?: null;
         }
 
-        $cached = Cache::store($this->cacheStore)->get($this->cacheKey);
+        $cached = Cache::store($this->cacheStore)->get(self::$CACHE_KEY, null);
+
         if ($cached) {
             return $cached;
         }
@@ -49,10 +50,11 @@ class AuthTokenManager
         try {
             $response = Http::post($authUrl, ['host' => $host]);
 
+            $response->throw();
             if ($response->successful()) {
                 $token = $response->json('token');
                 if ($token) {
-                    Cache::store($this->cacheStore)->put($this->cacheKey, $token);
+                    Cache::store($this->cacheStore)->put(self::$CACHE_KEY, $token);
 
                     return $token;
                 }
@@ -62,6 +64,7 @@ class AuthTokenManager
             }
         } catch (Throwable $e) {
             Log::warning('Exception while fetching auth token: '.$e->getMessage());
+            throw $e;
         }
 
         return null;
@@ -69,6 +72,6 @@ class AuthTokenManager
 
     public function clearToken(): void
     {
-        Cache::store($this->cacheStore)->forget($this->cacheKey);
+        Cache::store($this->cacheStore)->forget(self::$CACHE_KEY);
     }
 }
