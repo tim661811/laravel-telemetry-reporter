@@ -36,4 +36,12 @@ return [
     'custom_headers' => [
         // 'X-My-Custom-Header' => 'value',
     ],
+
+    // Optional signing of payloads to verify authenticity and integrity.
+    // If enabled, a signature header will be sent using HMAC-SHA256.
+    'signing' => [
+        'enabled' => env('TELEMETRY_SIGNING_ENABLED', false),
+        'key' => env('TELEMETRY_SIGNING_KEY'),
+        'header' => 'X-Telemetry-Signature',
+    ],
 ];

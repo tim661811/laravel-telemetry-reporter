@@ -4,6 +4,7 @@ namespace Tim661811\LaravelTelemetryReporter\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryHelper;
 
@@ -48,6 +49,7 @@ class ReportTelemetryCommand extends Command
                     $headers['Authorization'] = 'Bearer '.$authToken;
                 }
                 $headers = array_merge($headers, $customHeaders);
+                $this->addSignatureHeaderWhenSigningIsEnabled($headers, $payload);
 
                 Http::withHeaders($headers)->post($serverUrl, $payload);
 
@@ -60,5 +62,32 @@ class ReportTelemetryCommand extends Command
         }
 
         return 0;
+    }
+
+    private function addSignatureHeaderWhenSigningIsEnabled(array &$headers, array $payload): void
+    {
+        $enabled = config('telemetry-reporter.signing.enabled', false);
+        $key = config('telemetry-reporter.signing.key');
+        $header = config('telemetry-reporter.signing.header');
+
+        if (! $enabled) {
+            return;
+        }
+
+        if (empty($key)) {
+            Log::warning('Telemetry signing is enabled but no signing key is provided. Signing skipped.');
+
+            return;
+        }
+
+        if (empty($header)) {
+            Log::warning('Telemetry signing is enabled but no header name is provided. Signing skipped.');
+
+            return;
+        }
+
+        $payloadJson = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $signature = hash_hmac('sha256', $payloadJson, $key);
+        $headers[$header] = $signature;
     }
 }

@@ -72,6 +72,14 @@ return [
     'custom_headers' => [
         // 'X-My-Custom-Header' => 'value',
     ],
+
+    // Optional signing of payloads to verify authenticity and integrity.
+    // If enabled, a signature header will be sent using HMAC-SHA256.
+    'signing' => [
+        'enabled' => env('TELEMETRY_SIGNING_ENABLED', false),
+        'key' => env('TELEMETRY_SIGNING_KEY'),
+        'header' => 'X-Telemetry-Signature',
+    ],
 ];
 ```
 
@@ -153,6 +161,78 @@ Sample output:
 | `user_count`                                   | `App\Services\UserService` | `getTotalUsers`       | 60                 |
 | `storage_usage`                                | `App\Services\UserService` | `getDiskUsage`        | 1440               |
 | `App\Services\UserService@getActiveUsersCount` | `App\Services\UserService` | `getActiveUsersCount` | 1440               |
+
+## 🔐 Telemetry Payload Signing
+
+To improve data integrity and authenticity, you can enable HMAC signing of telemetry payloads.
+
+### How it works
+
+* The Laravel telemetry client generates a SHA-256 HMAC signature of the JSON payload using a shared secret key.
+* The signature is sent in a configurable HTTP header with each telemetry request.
+* Your telemetry server verifies the signature to confirm the request is from a trusted source and has not been tampered with.
+
+### Configuration
+
+Add these to your `.env`:
+
+```env
+TELEMETRY_SIGNING_ENABLED=true
+TELEMETRY_SIGNING_KEY=your-super-secret-key
+TELEMETRY_SIGNING_HEADER=X-Telemetry-Signature
+```
+
+Or configure in `config/telemetry-reporter.php`:
+
+```php
+'signing' => [
+    'enabled' => env('TELEMETRY_SIGNING_ENABLED', false),
+    'key' => env('TELEMETRY_SIGNING_KEY'),
+    'header' => env('TELEMETRY_SIGNING_HEADER', 'X-Telemetry-Signature'),
+],
+```
+
+### Example Server-Side Verification using a Laravel middleware
+
+```php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Log;
+
+class VerifyTelemetrySignature
+{
+    public function handle(Request $request, Closure $next)
+    {
+        $sharedSecret = config('telemetry.signing_key');
+        $signatureHeader = 'X-Telemetry-Signature';
+        $providedSignature = $request->header($signatureHeader);
+
+        $payload = $request->getContent();
+        $expectedSignature = hash_hmac('sha256', $payload, $sharedSecret);
+
+        if (! hash_equals($expectedSignature, $providedSignature)) {
+            Log::warning('Invalid telemetry signature detected.', [
+                'ip' => $request->ip(),
+            ]);
+            return response('Invalid signature', Response::HTTP_FORBIDDEN);
+        }
+
+        return $next($request);
+    }
+}
+```
+
+### Notes
+
+* Always use HTTPS to protect payload confidentiality in transit.
+* Signing only ensures the data is untampered and from a trusted client.
+* If signing is enabled but the key or header is not set, the telemetry client will skip signing and log a warning.
+* You can customize the signature header name via configuration.
 
 ## Changelog
 
