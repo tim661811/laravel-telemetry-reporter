@@ -39,21 +39,51 @@ These are the contents of the published config file:
 use Tim661811\LaravelTelemetryReporter\Enum\TelemetryInterval;
 
 return [
+
+    // Enable or disable telemetry reporting entirely.
     'enabled' => env('TELEMETRY_ENABLED', true),
+
+    // The full URL for where to send telemetry data to.
     'server_url' => env('TELEMETRY_SERVER_URL', 'localhost'),
+
+    // Unique identifier for this app instance, typically the app hostname.
     'app_host' => env('APP_HOST', 'localhost'),
 
-    // Which cache store to use for last-run timestamps (null = default)
+    // Which cache store to use for tracking when telemetry methods last ran.
     'cache_store' => env('TELEMETRY_CACHE_STORE', 'file'),
 
-    // Default interval for methods without an explicit interval
+    // Default interval for methods without an explicit #[TelemetryData(interval: ...)] attribute.
     'default_interval' => TelemetryInterval::OneDay->value,
-    
+
     /*
      * Enable verbose logging of telemetry payloads before sending.
+     * This will print the outgoing data to the console.
      * Useful for debugging and verifying payload content.
      */
     'verbose_logging' => env('TELEMETRY_VERBOSE_LOGGING', false),
+
+    // Optional URL to fetch authentication token from.
+    // If set, the package will automatically fetch & cache the token before sending telemetry.
+    'auth_token_url' => env('TELEMETRY_AUTH_TOKEN_URL'),
+
+    // Optional bearer token used for authenticating telemetry requests.
+    // Sent in the Authorization header as "Bearer <token>".
+    'auth_token' => env('TELEMETRY_AUTH_TOKEN'),
+
+    // Optional custom headers to include in every telemetry request.
+    // You can set this statically here or parse it from an env var.
+    // Example: ['X-My-Header' => 'value']
+    'custom_headers' => [
+        // 'X-My-Custom-Header' => 'value',
+    ],
+
+    // Optional signing of payloads to verify authenticity and integrity.
+    // If enabled, a signature header will be sent using HMAC-SHA256.
+    'signing' => [
+        'enabled' => env('TELEMETRY_SIGNING_ENABLED', false),
+        'key' => env('TELEMETRY_SIGNING_KEY'),
+        'header' => 'X-Telemetry-Signature',
+    ],
 ];
 ```
 
@@ -135,6 +165,141 @@ Sample output:
 | `user_count`                                   | `App\Services\UserService` | `getTotalUsers`       | 60                 |
 | `storage_usage`                                | `App\Services\UserService` | `getDiskUsage`        | 1440               |
 | `App\Services\UserService@getActiveUsersCount` | `App\Services\UserService` | `getActiveUsersCount` | 1440               |
+
+## 🔐 Telemetry Payload Signing
+
+To improve data integrity and authenticity, you can enable HMAC signing of telemetry payloads.
+
+### How it works
+
+* The Laravel telemetry client generates a SHA-256 HMAC signature of the JSON payload using a shared secret key.
+* The signature is sent in a configurable HTTP header with each telemetry request.
+* Your telemetry server verifies the signature to confirm the request is from a trusted source and has not been tampered with.
+
+### Configuration
+
+Add these to your `.env`:
+
+```env
+TELEMETRY_SIGNING_ENABLED=true
+TELEMETRY_SIGNING_KEY=your-super-secret-key
+TELEMETRY_SIGNING_HEADER=X-Telemetry-Signature
+```
+
+Or configure in `config/telemetry-reporter.php`:
+
+```php
+'signing' => [
+    'enabled' => env('TELEMETRY_SIGNING_ENABLED', false),
+    'key' => env('TELEMETRY_SIGNING_KEY'),
+    'header' => env('TELEMETRY_SIGNING_HEADER', 'X-Telemetry-Signature'),
+],
+```
+
+### Example Server-Side Verification using a Laravel middleware
+
+```php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Log;
+
+class VerifyTelemetrySignature
+{
+    public function handle(Request $request, Closure $next)
+    {
+        $sharedSecret = config('telemetry.signing_key');
+        $signatureHeader = 'X-Telemetry-Signature';
+        $providedSignature = $request->header($signatureHeader);
+
+        $payload = $request->getContent();
+        $expectedSignature = hash_hmac('sha256', $payload, $sharedSecret);
+
+        if (! hash_equals($expectedSignature, $providedSignature)) {
+            Log::warning('Invalid telemetry signature detected.', [
+                'ip' => $request->ip(),
+            ]);
+            return response('Invalid signature', Response::HTTP_FORBIDDEN);
+        }
+
+        return $next($request);
+    }
+}
+```
+
+### Notes
+
+* Always use HTTPS to protect payload confidentiality in transit.
+* Signing only ensures the data is untampered and from a trusted client.
+* If signing is enabled but the key or header is not set, the telemetry client will skip signing and log a warning.
+* You can customize the signature header name via configuration.
+
+## 🔑 Automatic Authentication Token Fetching
+
+This package supports an optional **automatic bearer token fetching mechanism** to simplify client authentication with your telemetry server.
+
+### How it works
+
+* Instead of manually configuring a static `auth_token`, you can specify an **authentication URL** (`auth_token_url`) in your config.
+* When enabled, the telemetry reporter will **try fetching a token from this URL before sending telemetry**.
+* The request to the auth endpoint sends the app host as JSON payload (e.g. `{ "host": "your-app-host" }`).
+* If a token is received, it is cached and used in subsequent telemetry requests as the Bearer token.
+* If no token is cached or fetching fails, the telemetry command stops and will try again on the next run.
+* If the telemetry server responds with an authentication error (HTTP 401), the cached token is cleared, and telemetry data caches are invalidated to allow retry.
+
+### Configuration
+
+Add this to your `.env` or config file:
+
+```env
+# URL to fetch a fresh auth token
+TELEMETRY_AUTH_TOKEN_URL=https://your-server.com/api/telemetry/auth-token
+
+# You can still optionally configure a static token fallback here
+TELEMETRY_AUTH_TOKEN=
+
+# Existing options still work as normal
+TELEMETRY_SERVER_URL=https://your-server.com/api/telemetry
+```
+
+In `config/telemetry-reporter.php`:
+
+```php
+'auth_token_url' => env('TELEMETRY_AUTH_TOKEN_URL', null),
+
+'auth_token' => env('TELEMETRY_AUTH_TOKEN', null),
+```
+
+### Behavior
+
+* If `auth_token_url` is set, the package will **try to fetch the token automatically before sending telemetry**.
+* If `auth_token_url` is empty but `auth_token` is set, it will use the static token.
+* If neither are set, telemetry requests will be sent **without authentication**.
+* When a 401 Unauthorized response is received, the cached token and telemetry last-run caches are cleared for automatic retry.
+
+### Server-side Expectations
+
+Your auth endpoint should accept a POST request with JSON payload:
+
+```json
+{
+    "host": "your-app-host"
+}
+```
+
+And respond with JSON:
+
+```json
+{
+    "token": "your-generated-bearer-token"
+}
+```
+
+This allows your server to control and approve telemetry clients dynamically.
 
 ## Changelog
 

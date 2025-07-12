@@ -1,5 +1,16 @@
 ### 📝 CHANGELOG
 
+## 0.3 (2025-07-11)
+
+### Added
+
+* Support for including a bearer token in the `Authorization` header when sending telemetry, enabling authenticated transport.
+* Automatic fetching and caching of bearer tokens from a configurable `auth_token_url`, with support for fallback to a static token if configured.
+* Telemetry signing support for verifying payload authenticity using HMAC-SHA256:
+    * Controlled via `telemetry-reporter.signing.enabled`
+    * Uses a configurable signing key and header name
+    * Signature is based on the raw JSON telemetry payload
+
 ## 0.2 (2025-07-10)
 
 ### Added

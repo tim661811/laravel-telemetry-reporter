@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
 use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryHelper;
 use Tim661811\LaravelTelemetryReporter\Tests\Stubs\FakeTelemetryCollector;
+use Tim661811\LaravelTelemetryReporter\Tests\Stubs\FakeTelemetryCollectorWithoutKeyOrInterval;
 
 it('lists registered telemetry data collectors', function () {
     App::bind(FakeTelemetryCollector::class, fn () => new FakeTelemetryCollector);
@@ -22,8 +23,6 @@ it('lists registered telemetry data collectors', function () {
         ->toContain('testMethod')
         ->toContain('123');
 });
-
-use Tim661811\LaravelTelemetryReporter\Tests\Stubs\FakeTelemetryCollectorWithoutKeyOrInterval;
 
 it('handles telemetry methods without custom key or interval', function () {
     App::bind(FakeTelemetryCollectorWithoutKeyOrInterval::class, fn () => new FakeTelemetryCollectorWithoutKeyOrInterval);

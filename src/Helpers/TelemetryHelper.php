@@ -70,7 +70,8 @@ class TelemetryHelper
 
         foreach ($reflection->getMethods() as $method) {
             $attributes = $method->getAttributes(TelemetryData::class);
-            if (! count($attributes)) {
+
+            if (count($attributes) === 0) {
                 continue;
             }
 
@@ -99,7 +100,7 @@ class TelemetryHelper
             $result = $object->{$method}();
             $data[$key] = $result;
 
-            Cache::store($this->cacheStore)->put($cacheKey, $now->toIso8601ZuluString());
+            Cache::store($this->cacheStore)->forever($cacheKey, $now->toIso8601ZuluString());
         });
 
         return $data;
