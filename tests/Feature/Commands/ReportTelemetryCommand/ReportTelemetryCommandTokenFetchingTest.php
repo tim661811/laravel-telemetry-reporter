@@ -28,6 +28,8 @@ beforeEach(function () {
             base_path('tests/Stubs'),
         ]);
     });
+
+    Http::preventStrayRequests();
 });
 
 it('fetches and caches the auth token before sending telemetry', function () {
@@ -39,9 +41,10 @@ it('fetches and caches the auth token before sending telemetry', function () {
     $exitCode = Artisan::call('telemetry:report');
     $output = Artisan::output();
 
-    expect($exitCode)->toBe(0)
-        ->and($output)
+    expect($output)
         ->toContain('Telemetry posted to https://localhost/api/report')
+        ->and($exitCode)
+        ->toBe(0)
         ->and(Cache::has(AuthTokenManager::$CACHE_KEY))->toBeTrue()
         ->and(Cache::get(AuthTokenManager::$CACHE_KEY))->toBe('fetched-token');
 
@@ -67,7 +70,6 @@ it('uses cached auth token on subsequent runs without fetching again', function 
     Cache::put(AuthTokenManager::$CACHE_KEY, 'cached-token');
 
     Http::fake([
-        'https://localhost/api/auth-token' => Http::response(['token' => 'cached-token'], 200),
         'https://localhost/api/report' => Http::response([], 200),
     ]);
 
@@ -77,8 +79,8 @@ it('uses cached auth token on subsequent runs without fetching again', function 
     expect($exitCode)->toBe(0)
         ->and($output)
         ->toContain('Telemetry posted to https://localhost/api/report');
+    dump(Http::recorded());
 
-    // Still two calls: auth-token (to revalidate) + report
     Http::assertSentCount(1);
 
     // auth-token was called (re‑using the cached token)
@@ -96,7 +98,6 @@ it('uses cached auth token on subsequent runs without fetching again', function 
 it('stops if auth token endpoint returns no token', function () {
     Http::fake([
         'https://localhost/api/auth-token' => Http::response([], 401),
-        'https://localhost/api/report' => Http::response([], 200), // never reached
     ]);
 
     $exitCode = Artisan::call('telemetry:report');
@@ -120,7 +121,6 @@ it('clears cached token and telemetry caches on 401 Unauthorized response', func
     Cache::put(AuthTokenManager::$CACHE_KEY, 'cached-token');
 
     Http::fake([
-        'https://localhost/api/auth-token' => Http::response(['token' => 'cached-token'], 200),
         'https://localhost/api/report' => Http::response([], 401),
     ]);
 
