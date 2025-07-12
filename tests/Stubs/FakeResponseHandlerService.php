@@ -13,7 +13,6 @@ class FakeResponseHandlerService
     #[TelemetryResponseHandler('foo')]
     public function handleFoo(array $data): void
     {
-        dump('called handleFoo');
         self::$firstCalled = true;
         self::$firstData = $data;
     }
@@ -25,8 +24,18 @@ class FakeResponseHandlerService
     #[TelemetryResponseHandler('bar')]
     public function handleBar(string $message): void
     {
-        dump('called handleBar');
         self::$secondCalled = true;
         self::$secondData = $message;
+    }
+
+    public static bool $thirdCalled = false;
+
+    public static mixed $thirdData = null;
+
+    #[TelemetryResponseHandler('bar')]
+    public function setMaintenanceMode(bool $on): void
+    {
+        self::$thirdCalled = true;
+        self::$thirdData = $on;
     }
 }

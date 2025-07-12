@@ -30,6 +30,7 @@ it('invokes response handlers for matching keys', function () {
     $response = [
         'foo' => ['x' => 123],
         'bar' => 'hello',
+        'FakeResponseHandlerService@setMaintenanceMode' => true,
     ];
 
     $processor->process($response);
@@ -37,7 +38,9 @@ it('invokes response handlers for matching keys', function () {
     expect(FakeResponseHandlerService::$firstCalled)->toBeTrue()
         ->and(FakeResponseHandlerService::$firstData)->toBe(['x' => 123])
         ->and(FakeResponseHandlerService::$secondCalled)->toBeTrue()
-        ->and(FakeResponseHandlerService::$secondData)->toBe('hello');
+        ->and(FakeResponseHandlerService::$secondData)->toBe('hello')
+        ->and(FakeResponseHandlerService::$thirdCalled)->toBeTrue()
+        ->and(FakeResponseHandlerService::$thirdData)->toBeTrue();
 });
 
 it('does not invoke handlers when keys are missing', function () {
