@@ -301,6 +301,82 @@ And respond with JSON:
 
 This allows your server to control and approve telemetry clients dynamically.
 
+## Handling Server Responses
+
+Starting with v0.4, the telemetry reporter can not only **send** data to your server but also **receive** and **process** instructions or information sent back. You simply mark methods in your own
+application with the `TelemetryResponseHandler` attribute, and the package will automatically invoke them when matching keys are present in the server response.
+
+### 1. Define your response handler methods
+
+In any class (for example, a service or listener), annotate methods with `#[TelemetryResponseHandler('your_key')]`. The key you specify should match the top‑level key in the JSON payload returned by
+your telemetry server:
+
+```php
+use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryResponseHandler;
+
+class FeatureFlagService
+{
+    #[TelemetryResponseHandler('feature_flags')]
+    public function syncFeatureFlags(array $flags): void
+    {
+        // e.g. cache or persist flags locally
+        Cache::put('feature_flags', $flags);
+    }
+
+    #[TelemetryResponseHandler('maintenance_mode')]
+    public function handleMaintenance(bool $isDown): void
+    {
+        // e.g. toggle a site-wide maintenance flag
+        config(['app.maintenance' => $isDown]);
+    }
+}
+
+class NotificationService
+{
+    #[TelemetryResponseHandler()]
+    public function send(string $message): void
+    {
+        User::first()->notify(new Notification($message));
+    }
+}
+```
+
+* **Key matching**: The package will look for methods whose attribute key matches a top‑level property in the response JSON. If you omit the key, it falls back to `ClassName@methodName`.
+
+* **Method signature**: The argument type can be `array`, `string`, `int`, `bool`, or any JSON‑deserializable type. It receives the value of that key.
+
+### 2. Server response format
+
+After your telemetry POST, your server can return a JSON body such as:
+
+```json
+{
+    "feature_flags": {
+        "beta": true,
+        "new_ui": false
+    },
+    "maintenance_mode": false,
+    "NotificationService@send": "Thanks for reporting!"
+}
+```
+
+Only the keys for which you have a `TelemetryResponseHandler` will be dispatched to your code; others are ignored.
+
+### 3. How it works under the hood
+
+1. **Discovery**: The package scans both your Laravel container bindings and your application code for any methods annotated with `#[TelemetryResponseHandler]`.
+2. **Invocation**: For each key that matches a registered handler, it calls your method with the corresponding value.
+
+### 4. Artisan integration
+
+The `telemetry:report` (alias `telemetry:send`) command will:
+
+1. Collect and send your annotated telemetry data.
+2. Receive the HTTP response.
+3. Automatically dispatch any keyed data to your `TelemetryResponseHandler` methods.
+
+No additional commands or configuration are required—just annotate and go!
+
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
