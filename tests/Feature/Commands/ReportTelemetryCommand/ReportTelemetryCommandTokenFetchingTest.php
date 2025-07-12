@@ -10,14 +10,16 @@ use Tim661811\LaravelTelemetryReporter\Services\AuthTokenManager;
 use Tim661811\LaravelTelemetryReporter\Tests\Stubs\FakeTelemetryCollectorWithoutKeyOrInterval;
 
 beforeEach(function () {
-    Cache::flush();
-
+    Config::set('telemetry-reporter.cache_store', 'file');
+    Config::set('cache.default', config('telemetry-reporter.cache_store'));
     Config::set('telemetry-reporter.enabled', true);
     Config::set('telemetry-reporter.server_url', 'https://localhost/api/report');
     Config::set('telemetry-reporter.app_host', 'test-host');
     Config::set('telemetry-reporter.custom_headers', []);
     Config::set('telemetry-reporter.auth_token_url', 'https://localhost/api/auth-token');
     Config::set('telemetry-reporter.auth_token', null);
+
+    Cache::store(config('telemetry-reporter.cache_store'))->flush();
 
     // Bind the stub collector so telemetry data exists
     App::bind(FakeTelemetryCollectorWithoutKeyOrInterval::class, fn () => new FakeTelemetryCollectorWithoutKeyOrInterval);
@@ -28,8 +30,6 @@ beforeEach(function () {
             base_path('tests/Stubs'),
         ]);
     });
-
-    Http::preventStrayRequests();
 });
 
 it('fetches and caches the auth token before sending telemetry', function () {
@@ -47,8 +47,6 @@ it('fetches and caches the auth token before sending telemetry', function () {
         ->toBe(0)
         ->and(Cache::has(AuthTokenManager::$CACHE_KEY))->toBeTrue()
         ->and(Cache::get(AuthTokenManager::$CACHE_KEY))->toBe('fetched-token');
-
-    // Token should be cached
 
     // Exactly two HTTP calls: auth-token then report
     Http::assertSentCount(2);
