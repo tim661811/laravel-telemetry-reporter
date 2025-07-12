@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
-use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryHelper;
+use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryDataCollector;
 use Tim661811\LaravelTelemetryReporter\Services\AuthTokenManager;
 use Tim661811\LaravelTelemetryReporter\Tests\Stubs\FakeTelemetryCollectorWithoutKeyOrInterval;
 
@@ -25,8 +25,8 @@ beforeEach(function () {
     App::bind(FakeTelemetryCollectorWithoutKeyOrInterval::class, fn () => new FakeTelemetryCollectorWithoutKeyOrInterval);
 
     // Bind TelemetryHelper to use your test stubs path
-    App::bind(TelemetryHelper::class, function () {
-        return new TelemetryHelper([
+    App::bind(TelemetryDataCollector::class, function () {
+        return new TelemetryDataCollector([
             base_path('tests/Stubs'),
         ]);
     });

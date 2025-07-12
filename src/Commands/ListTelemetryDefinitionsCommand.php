@@ -3,7 +3,7 @@
 namespace Tim661811\LaravelTelemetryReporter\Commands;
 
 use Illuminate\Console\Command;
-use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryHelper;
+use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryDataCollector;
 
 class ListTelemetryDefinitionsCommand extends Command
 {
@@ -13,7 +13,7 @@ class ListTelemetryDefinitionsCommand extends Command
 
     public function handle(): int
     {
-        $collector = new TelemetryHelper;
+        $collector = new TelemetryDataCollector;
 
         $definitions = $collector->listDefinitions();
 

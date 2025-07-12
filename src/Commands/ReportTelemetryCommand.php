@@ -5,8 +5,8 @@ namespace Tim661811\LaravelTelemetryReporter\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
-use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryHelper;
-use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryResponseProcessorHelper;
+use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryDataCollector;
+use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryResponseProcessor;
 use Tim661811\LaravelTelemetryReporter\Services\AuthTokenManager;
 use Tim661811\LaravelTelemetryReporter\Services\TelemetrySender;
 
@@ -21,7 +21,7 @@ class ReportTelemetryCommand extends Command
     public function __construct(
         protected AuthTokenManager $authTokenManager,
         protected TelemetrySender $telemetrySender,
-        protected TelemetryResponseProcessorHelper $responseProcessor,
+        protected TelemetryResponseProcessor $responseProcessor,
     ) {
         parent::__construct();
     }
@@ -38,7 +38,7 @@ class ReportTelemetryCommand extends Command
         $serverUrl = config('telemetry-reporter.server_url');
         $customHeaders = config('telemetry-reporter.custom_headers', []);
 
-        $collector = new TelemetryHelper;
+        $collector = new TelemetryDataCollector;
         $payload = [
             'host' => $host,
             'timestamp' => now()->toIso8601ZuluString(),

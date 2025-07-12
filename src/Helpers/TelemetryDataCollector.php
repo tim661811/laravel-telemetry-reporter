@@ -10,7 +10,7 @@ use ReflectionClass;
 use Throwable;
 use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryData;
 
-class TelemetryHelper
+class TelemetryDataCollector
 {
     protected string $cacheStore;
 

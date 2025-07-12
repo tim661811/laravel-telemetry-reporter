@@ -8,7 +8,7 @@ use ReflectionClass;
 use Throwable;
 use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryResponseHandler;
 
-class TelemetryResponseProcessorHelper
+class TelemetryResponseProcessor
 {
     /** @var array Directories to scan */
     protected array $paths;
