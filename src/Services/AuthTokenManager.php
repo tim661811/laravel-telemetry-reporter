@@ -54,7 +54,7 @@ class AuthTokenManager
             if ($response->successful()) {
                 $token = $response->json('token');
                 if ($token) {
-                    Cache::store($this->cacheStore)->put(self::$CACHE_KEY, $token);
+                    Cache::store($this->cacheStore)->forever(self::$CACHE_KEY, $token);
 
                     return $token;
                 }
