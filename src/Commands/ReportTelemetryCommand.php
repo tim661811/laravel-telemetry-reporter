@@ -3,7 +3,10 @@
 namespace Tim661811\LaravelTelemetryReporter\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
+use Throwable;
 use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryHelper;
+use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryResponseProcessorHelper;
 use Tim661811\LaravelTelemetryReporter\Services\AuthTokenManager;
 use Tim661811\LaravelTelemetryReporter\Services\TelemetrySender;
 
@@ -13,24 +16,20 @@ class ReportTelemetryCommand extends Command
 
     protected $aliases = ['telemetry:send'];
 
-    protected $description = 'Collect and send telemetry data to central server';
+    protected $description = 'Collect, send telemetry data to central server, and process any response handlers';
 
-    protected AuthTokenManager $authTokenManager;
-
-    protected TelemetrySender $telemetrySender;
-
-    public function __construct(AuthTokenManager $authTokenManager, TelemetrySender $telemetrySender)
-    {
+    public function __construct(
+        protected AuthTokenManager $authTokenManager,
+        protected TelemetrySender $telemetrySender,
+        protected TelemetryResponseProcessorHelper $responseProcessor,
+    ) {
         parent::__construct();
-
-        $this->authTokenManager = $authTokenManager;
-        $this->telemetrySender = $telemetrySender;
     }
 
     public function handle(): int
     {
         if (! config('telemetry-reporter.enabled')) {
-            $this->info('Sending telemetry is disabled via config (telemetry-reporter.enabled = false).');
+            $this->info('Telemetry disabled via config.');
 
             return 0;
         }
@@ -57,14 +56,42 @@ class ReportTelemetryCommand extends Command
             return 0;
         }
 
-        if (! $this->telemetrySender->send($serverUrl, $payload, $customHeaders)) {
+        // Send and get the response
+        $response = $this->telemetrySender->send($serverUrl, $payload, $customHeaders);
+
+        if ($response === null || ! $response->successful()) {
             $this->error('Failed to send telemetry data. See logs for details.');
+            $this->clearTelemetryLastRunCache(array_keys($payload['data']));
 
             return 1;
         }
 
         $this->info("Telemetry posted to {$serverUrl}");
 
+        // Process any response handlers if the server sent data
+        try {
+            $responseData = $response->json();
+            if (is_array($responseData) && count($responseData)) {
+                if (config('telemetry-reporter.verbose_logging')) {
+                    $this->info('Telemetry response data:');
+                    $this->line(json_encode($responseData, JSON_PRETTY_PRINT));
+                }
+
+                $this->responseProcessor->process($responseData);
+                $this->info('Processed telemetry response handlers.');
+            }
+        } catch (Throwable $e) {
+            $this->error('Failed to process telemetry response: '.$e->getMessage());
+        }
+
         return 0;
+    }
+
+    protected function clearTelemetryLastRunCache(array $keys): void
+    {
+        foreach ($keys as $key) {
+            $cacheKey = "laravel-telemetry-reporter:{$key}:last-run-time";
+            Cache::store(config('telemetry-reporter.cache_store'))->forget($cacheKey);
+        }
     }
 }
