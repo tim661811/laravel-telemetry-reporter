@@ -2,15 +2,15 @@
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
-use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryHelper;
+use Tim661811\LaravelTelemetryReporter\Helpers\TelemetryDataCollector;
 use Tim661811\LaravelTelemetryReporter\Tests\Stubs\FakeTelemetryCollector;
 use Tim661811\LaravelTelemetryReporter\Tests\Stubs\FakeTelemetryCollectorWithoutKeyOrInterval;
 
 it('lists registered telemetry data collectors', function () {
     App::bind(FakeTelemetryCollector::class, fn () => new FakeTelemetryCollector);
 
-    App::bind(TelemetryHelper::class, function () {
-        return new TelemetryHelper([
+    App::bind(TelemetryDataCollector::class, function () {
+        return new TelemetryDataCollector([
             base_path('tests/Stubs'), // add the test stub path
         ]);
     });
@@ -27,8 +27,8 @@ it('lists registered telemetry data collectors', function () {
 it('handles telemetry methods without custom key or interval', function () {
     App::bind(FakeTelemetryCollectorWithoutKeyOrInterval::class, fn () => new FakeTelemetryCollectorWithoutKeyOrInterval);
 
-    App::bind(TelemetryHelper::class, function () {
-        return new TelemetryHelper([
+    App::bind(TelemetryDataCollector::class, function () {
+        return new TelemetryDataCollector([
             base_path('tests/Stubs'),
         ]);
     });

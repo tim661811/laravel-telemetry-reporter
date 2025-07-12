@@ -1,6 +1,12 @@
 ### 📝 CHANGELOG
 
-## 0.3 (2025-07-11)
+## 0.4 (2025-07-12)
+
+### Added
+
+* `#[TelemetryResponseHandler]` attribute for designating methods that handle **incoming telemetry response data** from the server.
+
+## 0.3 (2025-07-12)
 
 ### Added
 
