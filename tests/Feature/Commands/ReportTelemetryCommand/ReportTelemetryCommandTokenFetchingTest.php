@@ -10,7 +10,7 @@ use Tim661811\LaravelTelemetryReporter\Services\AuthTokenManager;
 use Tim661811\LaravelTelemetryReporter\Tests\Stubs\FakeTelemetryCollectorWithoutKeyOrInterval;
 
 beforeEach(function () {
-    Cache::store(config('telemetry-reporter.cache_store'))->flush();
+    Cache::flush();
 
     Config::set('telemetry-reporter.enabled', true);
     Config::set('telemetry-reporter.server_url', 'https://localhost/api/report');
