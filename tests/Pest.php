@@ -12,15 +12,9 @@
 |
 */
 
-use Illuminate\Support\Facades\Config;
 use Tim661811\LaravelTelemetryReporter\Tests\TestCase as PackageTestCase;
 
 uses(PackageTestCase::class)->in('Feature');
-
-beforeEach(function () {
-    Config::set('telemetry-reporter.cache_store', 'file');
-    Config::set('cache.default', config('telemetry-reporter.cache_store'));
-});
 
 /*
 |--------------------------------------------------------------------------
