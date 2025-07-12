@@ -14,7 +14,7 @@
 
 use Tim661811\LaravelTelemetryReporter\Tests\TestCase as PackageTestCase;
 
-uses(PackageTestCase::class)->in('Feature');
+uses(PackageTestCase::class)->in('Feature')->in('Unit');
 
 /*
 |--------------------------------------------------------------------------
