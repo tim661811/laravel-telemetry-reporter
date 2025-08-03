@@ -2,15 +2,12 @@
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryData;
 
 it('handles exceptions in telemetry methods gracefully', function () {
     Http::fake();
 
-    Log::shouldReceive('warning')->once()->withArgs(function ($message) {
-        return str_contains($message, 'Failed to collect data from exception.test');
-    });
+    $this->mockLogFacade(['warning' => 'Failed to collect data from exception.test']);
 
     $dummyClass = new class
     {
@@ -32,9 +29,7 @@ it('handles exceptions in telemetry methods gracefully', function () {
 it('continues collecting other telemetry data when one method fails', function () {
     Http::fake();
 
-    Log::shouldReceive('warning')->once()->withArgs(function ($message) {
-        return str_contains($message, 'Failed to collect data from failing.test');
-    });
+    $this->mockLogFacade(['warning' => 'Failed to collect data from failing.test']);
 
     $dummyClass = new class
     {
@@ -67,9 +62,7 @@ it('continues collecting other telemetry data when one method fails', function (
 it('handles non-serializable data gracefully', function () {
     Http::fake();
 
-    Log::shouldReceive('warning')->once()->withArgs(function ($message) {
-        return str_contains($message, 'Method non-serializable.test returned non-serializable data');
-    });
+    $this->mockLogFacade(['warning' => 'Method non-serializable.test returned non-serializable data']);
 
     $dummyClass = new class
     {

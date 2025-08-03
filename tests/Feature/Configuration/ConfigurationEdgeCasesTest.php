@@ -1,15 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
 use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryData;
 
 it('handles missing server_url configuration gracefully', function () {
     config(['telemetry-reporter.server_url' => '']);
 
-    Log::shouldReceive('error')->once()->withArgs(function ($message) {
-        return str_contains($message, 'Telemetry server URL is not configured');
-    });
+    $this->mockLogFacade(['error' => 'Telemetry server URL is not configured']);
 
     $dummyClass = new class
     {
