@@ -77,7 +77,6 @@ it('uses cached auth token on subsequent runs without fetching again', function 
     expect($exitCode)->toBe(0)
         ->and($output)
         ->toContain('Telemetry posted to https://localhost/api/report');
-    dump(Http::recorded());
 
     Http::assertSentCount(1);
 

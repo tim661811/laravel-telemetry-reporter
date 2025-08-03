@@ -37,10 +37,13 @@ it('handles telemetry methods without custom key or interval', function () {
     $output = Artisan::output();
 
     expect($output)->toContain('FakeTelemetryCollectorWithoutKeyOrInterval@testMethod')
-        ->and($output)->toContain(config('telemetry-reporter.default_interval'));
+        ->and($output)->toContain((string) config('telemetry-reporter.default_interval'));
 });
 
 it('shows a message when no telemetry collectors are found', function () {
+    // Ensure the default app path is overridden to an empty directory
+    App::bind(TelemetryDataCollector::class, fn () => new TelemetryDataCollector(['/non-existent-dir']));
+
     Artisan::call('telemetry:list');
 
     expect(Artisan::output())->toContain('No telemetry data collectors found.');

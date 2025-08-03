@@ -18,39 +18,62 @@ class TelemetrySender
 
     /**
      * Send telemetry and return the HTTP response, or null on failure.
+     *
+     * @param  string  $url  The telemetry server URL
+     * @param  array<string, mixed>  $payload  The telemetry data payload
+     * @param  array<string, string>  $customHeaders  Additional headers to include
      */
     public function send(string $url, array $payload, array $customHeaders = []): ?\Illuminate\Http\Client\Response
     {
-        $headers = ['Accept' => 'application/json'];
+        if (empty($url)) {
+            Log::error('Telemetry server URL is not configured');
+
+            return null;
+        }
+
+        $headers = [
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'User-Agent' => 'Laravel-Telemetry-Reporter/0.4',
+        ];
 
         try {
             $token = $this->authTokenManager->getToken();
         } catch (Throwable $e) {
+            Log::warning('Failed to get authentication token: '.$e->getMessage());
+
             return null;
         }
 
         if ($token) {
             $headers['Authorization'] = 'Bearer '.$token;
         }
+
         $headers = array_merge($headers, $customHeaders);
         $this->addSignatureHeaderWhenSigningIsEnabled($headers, $payload);
 
         try {
-            $response = Http::withHeaders($headers)->post($url, $payload);
+            $response = Http::timeout(30)
+                ->withHeaders($headers)
+                ->post($url, $payload);
 
             if ($response->status() === Response::HTTP_UNAUTHORIZED) {
-                Log::info('Telemetry server returned 401 Unauthorized. Clearing cached token and telemetry caches.');
-
+                Log::info('Telemetry server returned 401 Unauthorized. Clearing cached token.');
                 $this->authTokenManager->clearToken();
 
                 return null;
             }
 
-            $response->throw();
+            if (! $response->successful()) {
+                Log::warning('Telemetry server returned non-successful status: '.$response->status());
+            }
 
             return $response;
         } catch (Throwable $e) {
-            Log::error('Failed to post telemetry: '.$e->getMessage());
+            Log::error('Failed to post telemetry: '.$e->getMessage(), [
+                'url' => $url,
+                'exception' => get_class($e),
+            ]);
 
             return null;
         }

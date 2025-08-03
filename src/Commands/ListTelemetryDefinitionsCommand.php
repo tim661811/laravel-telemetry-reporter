@@ -24,7 +24,7 @@ class ListTelemetryDefinitionsCommand extends Command
         }
 
         $this->table(
-            ['Key', 'Class', 'Method', 'Interval (minutes)'],
+            ['Key', 'Class', 'Method', 'Interval (seconds)'],
             collect($definitions)->map(fn ($d) => [
                 $d['key'],
                 $d['class'],

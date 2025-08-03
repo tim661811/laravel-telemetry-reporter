@@ -18,6 +18,9 @@ class AuthTokenManager
         $this->cacheStore = config('telemetry-reporter.cache_store');
     }
 
+    /**
+     * Get authentication token - either from cache, server, or static configuration.
+     */
     public function getToken(): ?string
     {
         $authUrl = config('telemetry-reporter.auth_token_url');
@@ -25,15 +28,16 @@ class AuthTokenManager
 
         if (empty($authUrl)) {
             // No auth endpoint configured - use static token if any, or null
-            return $staticToken ?: null;
+            return ! empty($staticToken) ? $staticToken : null;
         }
 
+        // Try to get cached token first
         $cached = Cache::store($this->cacheStore)->get(self::$CACHE_KEY, null);
-
-        if ($cached) {
+        if (! empty($cached)) {
             return $cached;
         }
 
+        // Fallback to fetching from server
         return $this->fetchTokenFromServer();
     }
 

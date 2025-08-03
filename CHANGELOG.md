@@ -1,5 +1,27 @@
 ### 📝 CHANGELOG
 
+## 1.0 (2025-08-02)
+
+### Added
+
+* Added comprehensive input validation for telemetry intervals to prevent negative values.
+* Added functionality to the main `LaravelTelemetryReporter` class for programmatic access.
+* Added proper service registration in the service provider with singleton bindings.
+* Added serialization validation to ensure telemetry data can be safely transmitted as JSON.
+
+### Changed
+
+* Enhanced authentication token management with better error handling.
+* Enhanced HTTP client with timeout configuration and better error reporting.
+* Improved error handling and logging throughout the codebase with better exception management.
+* Improved scheduled command configuration with background execution and overlap prevention.
+* Updated `telemetry:list` command header to display "Interval (seconds)" for accuracy.
+* Updated PHPDoc comments and type hints for better static analysis support.
+
+### Fixed
+
+* Fixed interval logic in `TelemetryDataCollector` to properly use seconds instead of minutes when checking cache timestamps.
+
 ## 0.4 (2025-07-12)
 
 ### Added

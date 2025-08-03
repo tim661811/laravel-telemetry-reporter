@@ -6,6 +6,8 @@ use Composer\ClassMapGenerator\ClassMapGenerator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use JsonException;
 use ReflectionClass;
 use Throwable;
 use Tim661811\LaravelTelemetryReporter\Attributes\TelemetryData;
@@ -84,26 +86,65 @@ class TelemetryDataCollector
         }
     }
 
+    /**
+     * Collect telemetry data from all registered methods that are due for collection.
+     *
+     * @return array<string, mixed>
+     */
     public function collectData(): array
     {
         $data = [];
         $now = now();
+        $errors = [];
 
-        $this->collect(function ($object, $method, $key, $interval) use (&$data, $now) {
+        $this->collect(function ($object, $method, $key, $interval) use (&$data, &$errors, $now) {
             $cacheKey = "laravel-telemetry-reporter:{$key}:last-run-time";
-            $lastRun = Cache::store($this->cacheStore)->get($cacheKey);
 
-            if ($lastRun && Carbon::parse($lastRun)->addMinutes($interval)->gt($now)) {
-                return;
+            try {
+                $lastRun = Cache::store($this->cacheStore)->get($cacheKey);
+
+                if ($lastRun && Carbon::parse($lastRun)->addSeconds($interval)->gt($now)) {
+                    return;
+                }
+
+                $result = $object->{$method}();
+
+                // Validate the result is serializable
+                if (! $this->isSerializable($result)) {
+                    $errors[] = "Method {$key} returned non-serializable data";
+
+                    return;
+                }
+
+                $data[$key] = $result;
+                Cache::store($this->cacheStore)->forever($cacheKey, $now->toIso8601ZuluString());
+
+            } catch (Throwable $e) {
+                $errors[] = "Failed to collect data from {$key}: ".$e->getMessage();
             }
-
-            $result = $object->{$method}();
-            $data[$key] = $result;
-
-            Cache::store($this->cacheStore)->forever($cacheKey, $now->toIso8601ZuluString());
         });
 
+        if (! empty($errors)) {
+            foreach ($errors as $error) {
+                Log::warning($error);
+            }
+        }
+
         return $data;
+    }
+
+    /**
+     * Check if a value can be safely serialized to JSON.
+     */
+    protected function isSerializable(mixed $value): bool
+    {
+        try {
+            json_encode($value, JSON_THROW_ON_ERROR);
+
+            return true;
+        } catch (JsonException) {
+            return false;
+        }
     }
 
     public function listDefinitions(): array
