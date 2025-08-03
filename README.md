@@ -9,6 +9,19 @@ A reusable Laravel 10+ package that lets you annotate any service method with a 
 configurable intervals—to a central server over HTTP. Data is grouped per application host, is fully configurable via a published telemetry.php config (backed by your chosen cache), and integrates
 seamlessly with Laravel’s scheduler and HTTP client.
 
+## Why use this?
+
+If you're distributing Laravel apps across multiple installations — like SaaS clients, embedded setups, or on-premise deployments — it's hard to keep visibility into how those apps are behaving.
+
+This package helps you:
+
+- 🔍 **Collect custom metrics** (e.g. user count, storage usage, feature flags)
+- 🔁 **Report at configurable intervals**
+- 🔐 **Secure data with HMAC signing and bearer tokens**
+- 🧠 **Handle remote instructions** (e.g. toggle features or maintenance mode)
+
+Perfect for telemetry, license enforcement, usage analytics, or remotely managing feature flags — without requiring direct access to every app installation.
+
 ## Installation
 
 You can install the package via composer:
