@@ -1,10 +1,18 @@
 {
     "name": "tim661811/laravel-telemetry-reporter",
-    "description": "A reusable Laravel 10+ package that lets you annotate any service method with a PHP attribute to collect custom telemetry (e.g. user counts, disk usage, feature flags) and automatically report it—at configurable intervals—to a central server over HTTP. Data is grouped per application host, is fully configurable via a published telemetry.php config (backed by your chosen cache), and integrates seamlessly with Laravel’s scheduler and HTTP client.",
+    "description": "A reusable Laravel 10+ package that lets you annotate any service method with a PHP attribute to collect custom telemetry (e.g. user counts, disk usage, feature flags) and automatically report it—at configurable intervals—to a central server over HTTP. Data is grouped per application host, is fully configurable via a published telemetry.php config (backed by your chosen cache), and integrates seamlessly with Laravel’s scheduler and HTTP client.",
     "keywords": [
         "tim661811",
         "laravel",
-        "laravel-telemetry-reporter"
+        "laravel-telemetry-reporter",
+        "telemetry",
+        "metrics",
+        "analytics",
+        "observer",
+        "reporter",
+        "laravel-package",
+        "feature-flags",
+        "license-checking"
     ],
     "homepage": "https://github.com/tim661811/laravel-telemetry-reporter",
     "license": "MIT",
